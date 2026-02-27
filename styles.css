@@ -1,4 +1,3 @@
-/* styles.css */
 :root{
   --bg:#07070b;
   --panel:#0f1016;
@@ -163,6 +162,24 @@ body{
   box-shadow: 0 18px 90px rgba(0,0,0,.6);
 }
 
+/* More "real booth" feel */
+.booth::before{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(800px 520px at 50% 18%, rgba(255,255,255,.10), rgba(0,0,0,0) 60%),
+    radial-gradient(1400px 900px at 50% 110%, rgba(0,0,0,.85), rgba(0,0,0,0) 55%);
+  z-index:2;
+}
+.booth::after{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.06), inset 0 0 60px rgba(0,0,0,.55);
+  z-index:2;
+}
+
 video{
   width:100%;
   height:100%;
@@ -175,6 +192,7 @@ video{
   position:absolute;
   inset:0;
   pointer-events:none;
+  z-index:3;
 }
 .overlay img{
   width:100%;
@@ -189,6 +207,7 @@ video{
   background:#fff;
   opacity:0;
   pointer-events:none;
+  z-index:6;
 }
 
 .countdown{
@@ -202,6 +221,34 @@ video{
   text-shadow: 0 10px 50px rgba(0,0,0,.7);
   opacity:0;
   pointer-events:none;
+  z-index:7;
+}
+
+/* Prompts (Say cheese, Photo 1 of 3, etc.) */
+.prompt{
+  position:absolute;
+  left:50%;
+  top:18px;
+  transform:translateX(-50%);
+  padding:10px 14px;
+  border-radius:999px;
+  background: rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.12);
+  color:#fff;
+  font-weight:900;
+  letter-spacing:.3px;
+  opacity:0;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index:8;
+  text-align:center;
+  max-width:92%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.prompt.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
 }
 
 /* HOME SCREEN */
@@ -210,7 +257,7 @@ video{
   display:flex; align-items:center; justify-content:center;
   background: radial-gradient(900px 500px at 50% 20%, rgba(107,16,32,.25), rgba(0,0,0,.88));
   backdrop-filter: blur(10px);
-  z-index:5;
+  z-index:9;
 }
 .homeCard{
   width:min(520px, 92vw);
@@ -222,7 +269,7 @@ video{
   box-shadow: 0 18px 90px rgba(0,0,0,.6);
 }
 .homeTitle{ font-size:26px; font-weight:900; letter-spacing:.6px; }
-.homeSub{ margin-top:6px; color:var(--muted); font-weight:700; }
+.homeSub{ margin-top:8px; color:var(--muted); font-weight:700; }
 .homeBtn{ width:100%; margin-top:18px; padding:16px 18px; font-size:18px; }
 .homeHint{ margin-top:12px; font-size:12px; color:var(--muted); line-height:1.35; }
 
@@ -272,12 +319,13 @@ video{
   padding:18px;
   background: rgba(0,0,0,.82);
   backdrop-filter: blur(10px);
+  z-index:10;
 }
 
 .modalCard{
   width:min(1040px, 96vw);
   max-height:92vh;
-  overflow:auto;
+  overflow:hidden;
   background: rgba(15,16,22,.94);
   border: 1px solid rgba(255,255,255,.10);
   border-radius: 22px;
@@ -286,17 +334,17 @@ video{
 }
 
 @media (max-width: 980px){
-  .modalCard{ grid-template-columns:1fr; }
+  .modalCard{ grid-template-columns:1fr; max-height:94vh; }
 }
 
 .preview{
   background: var(--panel2);
-  display:flex;
-  align-items:center;
-  justify-content:center;
   padding:16px;
   border-right: 1px solid rgba(255,255,255,.08);
-  min-height:320px;
+  overflow:auto;                 /* ✅ FIX: scroll instead of crop */
+  align-items:flex-start;
+  display:flex;
+  justify-content:center;
 }
 @media (max-width: 980px){
   .preview{ border-right:none; border-bottom:1px solid rgba(255,255,255,.08); }
@@ -304,15 +352,16 @@ video{
 
 .preview img{
   width: min(520px, 92%);
-  max-height: 80vh;
-  height:auto;
+  height: auto;                  /* ✅ FIX: no forced height */
+  max-height: none;              /* ✅ FIX: don’t clip top/bottom */
   object-fit: contain;
   border-radius:14px;
   border:1px solid rgba(255,255,255,.12);
   background:#000;
+  display:block;
 }
 
-.panel{ padding:16px; }
+.panel{ padding:16px; overflow:auto; }
 .panelTitle{ font-size:18px; font-weight:900; margin-bottom:6px; }
 .panelSub{ font-size:12px; color:var(--muted); margin-bottom:12px; }
 
