@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,7 +9,6 @@
 </head>
 <body>
   <div class="app">
-    <!-- LEFT: Frames -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brandMark">K</div>
@@ -28,13 +28,12 @@
       </div>
     </aside>
 
-    <!-- RIGHT: Booth -->
     <main class="main">
       <header class="topbar">
         <div class="topTitle">PHOTOBOOTH</div>
         <div class="chip">
           <span id="chipDot" class="dot warn"></span>
-          <span id="chipText">Tap Start</span>
+          <span id="chipText">Tap Begin</span>
         </div>
       </header>
 
@@ -43,13 +42,22 @@
           <video id="video" playsinline autoplay muted></video>
 
           <div class="overlay">
-            <img id="frameOverlay" alt="Selected frame overlay" />
+            <img id="frameOverlay" alt="" />
+          </div>
+
+          <!-- Home screen overlay -->
+          <div id="home" class="home">
+            <div class="homeCard">
+              <div class="homeTitle">The Gathering on Summit</div>
+              <div class="homeSub">LHS Killough Photobooth</div>
+              <button id="beginBtn" class="btn primary homeBtn">TAP TO BEGIN</button>
+              <div class="homeHint">Choose a frame, then tap Begin.</div>
+            </div>
           </div>
 
           <div id="flash" class="flash"></div>
           <div id="countdown" class="countdown"></div>
 
-          <!-- RESULT MODAL -->
           <div id="modal" class="modal">
             <div class="modalCard">
               <div class="preview">
@@ -68,7 +76,7 @@
 
                 <button id="emailBtn" class="btn primary">EMAIL TO ME</button>
                 <div class="tinyNote">
-                  Email sends the strip image. Social platforms don’t accept “auto-post from email” — the email can include share links if your backend provides a public URL.
+                  Instagram: download the image and share from Photos.
                 </div>
 
                 <div class="divider"></div>
@@ -81,7 +89,7 @@
       </section>
 
       <footer class="controls">
-        <button id="startBtn" class="btn primary">START</button>
+        <button id="startBtn" class="btn primary" disabled>START</button>
         <button id="resetBtn" class="btn secondary" disabled>RESET</button>
       </footer>
     </main>
