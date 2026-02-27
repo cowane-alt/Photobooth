@@ -1,7 +1,7 @@
+// app.js
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
-  // UI
   const framesEl = document.getElementById("frames");
   const frameOverlay = document.getElementById("frameOverlay");
   const video = document.getElementById("video");
@@ -20,11 +20,12 @@
   const emailBtn = document.getElementById("emailBtn");
   const startOverBtn = document.getElementById("startOverBtn");
 
-  // Settings
+  const home = document.getElementById("home");
+  const beginBtn = document.getElementById("beginBtn");
+
   const SHOTS = 3;
   const COUNTDOWN_SECONDS = 3;
 
-  // Frames (replace filenames with your real assets)
   const FRAMES = [
     { name: "Gathering Classic", src: "assets/frames/frame-gathering-classic.png" },
     { name: "Killough Maroon",   src: "assets/frames/frame-killough-maroon.png" },
@@ -101,7 +102,6 @@
     if (stream) return true;
 
     try {
-      // Request AFTER user gesture (Start) for iOS/Chrome reliability
       stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
@@ -117,6 +117,7 @@
       });
 
       resetBtn.disabled = false;
+      startBtn.disabled = false;
       setChip("ok", "Camera ready");
       return true;
     } catch (e) {
@@ -136,33 +137,32 @@
     });
   }
 
-async function captureWithOverlay() {
-  if (!video.videoWidth || !video.videoHeight) await sleep(200);
-  const w = video.videoWidth;
-  const h = video.videoHeight;
+  async function captureWithOverlay() {
+    if (!video.videoWidth || !video.videoHeight) await sleep(200);
+    const w = video.videoWidth;
+    const h = video.videoHeight;
 
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
 
-  // mirror capture to match preview
-  ctx.save();
-  ctx.translate(w, 0);
-  ctx.scale(-1, 1);
-  ctx.drawImage(video, 0, 0, w, h);
-  ctx.restore();
+    ctx.save();
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.restore();
 
-  // Overlay is OPTIONAL now (won't break capture)
-  try {
-    const overlay = await loadImage(FRAMES[selectedFrame].src);
-    ctx.drawImage(overlay, 0, 0, w, h);
-  } catch (e) {
-    console.warn("Frame overlay failed to load:", FRAMES[selectedFrame].src, e);
+    // Overlay optional (won't break capture if image missing)
+    try {
+      const overlay = await loadImage(FRAMES[selectedFrame].src);
+      ctx.drawImage(overlay, 0, 0, w, h);
+    } catch (e) {
+      console.warn("Frame overlay failed to load:", FRAMES[selectedFrame].src, e);
+    }
+
+    return canvas.toDataURL("image/png", 0.92);
   }
-
-  return canvas.toDataURL("image/png", 0.92);
-}
 
   async function buildPhotoStrip(images) {
     const loaded = await Promise.all(images.map(loadImage));
@@ -179,11 +179,9 @@ async function captureWithOverlay() {
     c.height = totalH;
     const ctx = c.getContext("2d");
 
-    // Background
     ctx.fillStyle = "#0b0b10";
     ctx.fillRect(0, 0, c.width, c.height);
 
-    // Header
     ctx.fillStyle = "#6b1020";
     ctx.fillRect(0, 0, stripW, headerH);
     ctx.fillStyle = "#fff";
@@ -192,14 +190,12 @@ async function captureWithOverlay() {
     ctx.font = "900 36px Arial";
     ctx.fillText("ON SUMMIT • LHS KILLOUGH", 28, 108);
 
-    // Photos
     let y = headerH;
     for (let i = 0; i < loaded.length; i++) {
       ctx.drawImage(loaded[i], 0, y, photoW, photoH);
       y += photoH + gap;
     }
 
-    // Footer
     ctx.fillStyle = "rgba(255,255,255,0.06)";
     ctx.fillRect(0, c.height - footerH, stripW, footerH);
     ctx.fillStyle = "#fff";
@@ -210,7 +206,6 @@ async function captureWithOverlay() {
     ctx.font = "700 22px Arial";
     ctx.fillText(new Date().toLocaleString(), 28, c.height - 52);
 
-    // Border
     ctx.strokeStyle = "rgba(255,255,255,0.16)";
     ctx.lineWidth = 8;
     ctx.strokeRect(12, 12, c.width - 24, c.height - 24);
@@ -233,7 +228,7 @@ async function captureWithOverlay() {
     stripDataUrl = "";
     stripPreview.src = "";
     emailInput.value = "";
-    setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Tap Start");
+    setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Tap Begin");
   }
 
   function downloadStrip() {
@@ -245,7 +240,8 @@ async function captureWithOverlay() {
   }
 
   async function emailStrip() {
-    if (!CONFIG.GAS_POST_URL) {
+    const url = (CONFIG.GAS_POST_URL || "").trim();
+    if (!url) {
       alert("Email is not configured. Add your Apps Script URL in config.js.");
       return;
     }
@@ -259,24 +255,22 @@ async function captureWithOverlay() {
     emailBtn.disabled = true;
     setChip("warn", "Sending email…");
 
-    // POSTing cross-domain can trigger CORS. We use no-cors so it still sends.
-    // You won’t be able to read the response in the browser, but the email will send.
     const payload = { email, pngDataUrl: stripDataUrl };
 
     try {
-      await fetch(CONFIG.GAS_POST_URL, {
+      await fetch(url, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
       });
 
-      setChip("ok", "Email sent (check inbox)");
+      setChip("ok", "Email sent");
       alert("Sent! Check your email.");
     } catch (e) {
       console.error(e);
       setChip("bad", "Email failed");
-      alert("Email failed. Check the console or your Apps Script deployment access.");
+      alert("Email failed. Check your Apps Script deployment access.");
     } finally {
       emailBtn.disabled = false;
     }
@@ -286,35 +280,50 @@ async function captureWithOverlay() {
     if (busy) return;
     busy = true;
 
-    const ok = await ensureCamera();
-    if (!ok) { busy = false; return; }
-
-    setChip("warn", "Capturing…");
-    startBtn.disabled = true;
-
-    const shots = [];
-
-    for (let s = 1; s <= SHOTS; s++) {
-      for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
-        showCountdown(t);
-        await sleep(900);
+    try {
+      if (!stream) {
+        alert("Tap BEGIN first.");
+        busy = false;
+        return;
       }
-      hideCountdown();
-      flash();
-      shots.push(await captureWithOverlay());
-      await sleep(450);
+
+      setChip("warn", "Capturing…");
+      startBtn.disabled = true;
+
+      const shots = [];
+      for (let s = 1; s <= SHOTS; s++) {
+        for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
+          showCountdown(t);
+          await sleep(900);
+        }
+        hideCountdown();
+        flash();
+        shots.push(await captureWithOverlay());
+        await sleep(450);
+      }
+
+      setChip("warn", "Building strip…");
+      const strip = await buildPhotoStrip(shots);
+      openResult(strip);
+
+      setChip("ok", "Done");
+    } catch (e) {
+      console.error(e);
+      setChip("bad", "Capture error");
+      alert("Capture error: " + (e?.message || e));
+    } finally {
+      startBtn.disabled = false;
+      busy = false;
     }
-
-    setChip("warn", "Building strip…");
-    const strip = await buildPhotoStrip(shots);
-    openResult(strip);
-
-    setChip("ok", "Done");
-    startBtn.disabled = false;
-    busy = false;
   }
 
-  // Wire up buttons
+  // Buttons
+  beginBtn.addEventListener("click", async () => {
+    const ok = await ensureCamera();
+    if (!ok) return;
+    home.style.display = "none";
+  });
+
   startBtn.addEventListener("click", startSession);
   resetBtn.addEventListener("click", startOver);
   downloadBtn.addEventListener("click", downloadStrip);
@@ -324,5 +333,5 @@ async function captureWithOverlay() {
   // Init
   buildFramePicker();
   setFrame(0);
-  setChip("warn", "Tap Start");
+  setChip("warn", "Tap Begin");
 })();
