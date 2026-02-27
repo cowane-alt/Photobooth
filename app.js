@@ -136,32 +136,33 @@
     });
   }
 
-  async function captureWithOverlay() {
-    // wait for video dimensions
-    if (!video.videoWidth || !video.videoHeight) {
-      await sleep(200);
-    }
-    const w = video.videoWidth;
-    const h = video.videoHeight;
+async function captureWithOverlay() {
+  if (!video.videoWidth || !video.videoHeight) await sleep(200);
+  const w = video.videoWidth;
+  const h = video.videoHeight;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
 
-    // mirror capture to match preview
-    ctx.save();
-    ctx.translate(w, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, w, h);
-    ctx.restore();
+  // mirror capture to match preview
+  ctx.save();
+  ctx.translate(w, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, 0, 0, w, h);
+  ctx.restore();
 
-    // draw overlay
+  // Overlay is OPTIONAL now (won't break capture)
+  try {
     const overlay = await loadImage(FRAMES[selectedFrame].src);
     ctx.drawImage(overlay, 0, 0, w, h);
-
-    return canvas.toDataURL("image/png", 0.92);
+  } catch (e) {
+    console.warn("Frame overlay failed to load:", FRAMES[selectedFrame].src, e);
   }
+
+  return canvas.toDataURL("image/png", 0.92);
+}
 
   async function buildPhotoStrip(images) {
     const loaded = await Promise.all(images.map(loadImage));
