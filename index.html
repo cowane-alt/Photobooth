@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -45,19 +44,23 @@
             <img id="frameOverlay" alt="" />
           </div>
 
+          <!-- On-screen prompts like a mall photobooth -->
+          <div id="prompt" class="prompt" aria-live="polite"></div>
+
           <!-- Home screen overlay -->
           <div id="home" class="home">
             <div class="homeCard">
-              <div class="homeTitle">The Gathering on Summit</div>
-              <div class="homeSub">LHS Killough Photobooth</div>
+              <div class="homeTitle">Welcome to the Photobooth</div>
+              <div class="homeSub">Choose a frame, then get ready for 3 photos.</div>
               <button id="beginBtn" class="btn primary homeBtn">TAP TO BEGIN</button>
-              <div class="homeHint">Choose a frame, then tap Begin.</div>
+              <div class="homeHint">When you press Start, it will take 3 pictures automatically.</div>
             </div>
           </div>
 
           <div id="flash" class="flash"></div>
           <div id="countdown" class="countdown"></div>
 
+          <!-- RESULT MODAL -->
           <div id="modal" class="modal">
             <div class="modalCard">
               <div class="preview">
@@ -75,9 +78,7 @@
                 <input id="emailInput" class="input" type="email" placeholder="you@example.com" />
 
                 <button id="emailBtn" class="btn primary">EMAIL TO ME</button>
-                <div class="tinyNote">
-                  Instagram: download the image and share from Photos.
-                </div>
+                <div class="tinyNote">Instagram: download the image and share from Photos.</div>
 
                 <div class="divider"></div>
 
