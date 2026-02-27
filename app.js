@@ -1,4 +1,3 @@
-// app.js
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
@@ -9,6 +8,7 @@
   const chipText = document.getElementById("chipText");
   const flashEl = document.getElementById("flash");
   const countdownEl = document.getElementById("countdown");
+  const promptEl = document.getElementById("prompt");
 
   const startBtn = document.getElementById("startBtn");
   const resetBtn = document.getElementById("resetBtn");
@@ -48,13 +48,41 @@
     return new Promise(r => setTimeout(r, ms));
   }
 
-  function flash() {
+  function showPrompt(text, ms = 900) {
+    promptEl.textContent = text;
+    promptEl.classList.add("show");
+    if (ms > 0) {
+      setTimeout(() => promptEl.classList.remove("show"), ms);
+    }
+  }
+
+  function hidePrompt() {
+    promptEl.classList.remove("show");
+    promptEl.textContent = "";
+  }
+
+  function flashFlicker() {
+    // Quick “mall booth” flicker
     flashEl.style.transition = "none";
-    flashEl.style.opacity = 0.9;
-    requestAnimationFrame(() => {
+    flashEl.style.opacity = 0.0;
+
+    const steps = [
+      { o: 0.95, t: 0 },
+      { o: 0.00, t: 80 },
+      { o: 0.70, t: 140 },
+      { o: 0.00, t: 220 },
+    ];
+
+    steps.forEach(s => {
+      setTimeout(() => {
+        flashEl.style.opacity = s.o;
+      }, s.t);
+    });
+
+    setTimeout(() => {
       flashEl.style.transition = "opacity 220ms ease";
       flashEl.style.opacity = 0;
-    });
+    }, 260);
   }
 
   function showCountdown(n) {
@@ -147,13 +175,14 @@
     canvas.height = h;
     const ctx = canvas.getContext("2d");
 
+    // mirror capture to match preview
     ctx.save();
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, w, h);
     ctx.restore();
 
-    // Overlay optional (won't break capture if image missing)
+    // overlay optional
     try {
       const overlay = await loadImage(FRAMES[selectedFrame].src);
       ctx.drawImage(overlay, 0, 0, w, h);
@@ -217,6 +246,10 @@
     stripDataUrl = dataUrl;
     stripPreview.src = dataUrl;
     modal.style.display = "flex";
+
+    // make sure the preview starts at top (prevents “looks cut off”)
+    const preview = document.querySelector(".preview");
+    if (preview) preview.scrollTop = 0;
   }
 
   function closeResult() {
@@ -228,6 +261,7 @@
     stripDataUrl = "";
     stripPreview.src = "";
     emailInput.value = "";
+    hidePrompt();
     setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Tap Begin");
   }
 
@@ -287,21 +321,29 @@
         return;
       }
 
+      setChip("warn", "Get ready…");
+      showPrompt("Get ready for 3 photos", 1200);
+      await sleep(900);
+
       setChip("warn", "Capturing…");
       startBtn.disabled = true;
 
       const shots = [];
       for (let s = 1; s <= SHOTS; s++) {
+        showPrompt(`Photo ${s} of ${SHOTS} • Say cheese`, 950);
+
         for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
           showCountdown(t);
           await sleep(900);
         }
         hideCountdown();
-        flash();
+
+        flashFlicker();
         shots.push(await captureWithOverlay());
         await sleep(450);
       }
 
+      hidePrompt();
       setChip("warn", "Building strip…");
       const strip = await buildPhotoStrip(shots);
       openResult(strip);
@@ -322,6 +364,7 @@
     const ok = await ensureCamera();
     if (!ok) return;
     home.style.display = "none";
+    showPrompt("Choose a frame, then press Start", 1200);
   });
 
   startBtn.addEventListener("click", startSession);
