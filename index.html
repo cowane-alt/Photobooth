@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Gathering on Summit Photobooth</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT: Frames -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brandMark">K</div>
+        <div>
+          <div class="brandTitle">The Gathering on Summit</div>
+          <div class="brandSub">LHS Killough • Photobooth</div>
+        </div>
+      </div>
+
+      <div class="sectionTitle">Choose a Frame</div>
+      <div id="frames" class="frameGrid"></div>
+
+      <div class="help">
+        <div class="helpTitle">If camera doesn’t show</div>
+        <div>• iPad: open in Safari (not inside Canvas app).</div>
+        <div>• Desktop: allow camera for this site.</div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Booth -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topTitle">PHOTOBOOTH</div>
+        <div class="chip">
+          <span id="chipDot" class="dot warn"></span>
+          <span id="chipText">Tap Start</span>
+        </div>
+      </header>
+
+      <section class="stage">
+        <div class="booth">
+          <video id="video" playsinline autoplay muted></video>
+
+          <div class="overlay">
+            <img id="frameOverlay" alt="Selected frame overlay" />
+          </div>
+
+          <div id="flash" class="flash"></div>
+          <div id="countdown" class="countdown"></div>
+
+          <!-- RESULT MODAL -->
+          <div id="modal" class="modal">
+            <div class="modalCard">
+              <div class="preview">
+                <img id="stripPreview" alt="Photo strip preview" />
+              </div>
+              <div class="panel">
+                <div class="panelTitle">Your Photo Strip</div>
+                <div class="panelSub">Download it or email it to yourself.</div>
+
+                <button id="downloadBtn" class="btn primary">DOWNLOAD</button>
+
+                <div class="divider"></div>
+
+                <label class="label">Email</label>
+                <input id="emailInput" class="input" type="email" placeholder="you@example.com" />
+
+                <button id="emailBtn" class="btn primary">EMAIL TO ME</button>
+                <div class="tinyNote">
+                  Email sends the strip image. Social platforms don’t accept “auto-post from email” — the email can include share links if your backend provides a public URL.
+                </div>
+
+                <div class="divider"></div>
+
+                <button id="startOverBtn" class="btn secondary">START OVER</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="controls">
+        <button id="startBtn" class="btn primary">START</button>
+        <button id="resetBtn" class="btn secondary" disabled>RESET</button>
+      </footer>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
