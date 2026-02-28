@@ -471,14 +471,14 @@ body.modalOpen .mobileBar{
   width: auto;
   max-width: 90vw;
   height: auto;
-  max-height: 42vh;                    /* key: shrink so panel fits */
+  max-height: 32vh;                    /* key: shrink so panel fits */
   object-fit: contain;
 }
 
 /* Panel should NOT be its own scroll area */
 .panel{
-  overflow: visible;                   /* no scroll here */
-  padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+  .panel{
+  padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
 }
 
 .panel .btn{
