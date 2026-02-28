@@ -342,13 +342,11 @@ body.modalOpen .mobileBar{
 @media (max-width: 980px){
   .app{ grid-template-columns:1fr; }
   .sidebar{ display:none; }
-
   .controlsDesktop{ display:none; }
 
   .stage{
     padding:10px;
-    /* leave space for mobile bottom bar */
-    padding-bottom: 200px;
+    padding-bottom: 200px; /* space for mobile bottom bar */
   }
 
   .booth{
@@ -434,59 +432,49 @@ body.modalOpen .mobileBar{
     min-width:0;
   }
 
-  /* Modal on phone: stack vertically and FIT the strip */
-@media (max-width: 980px){
+  /* ---------- MOBILE RESULT MODAL (NO NESTED SCROLL, STRIP SHRINKS) ---------- */
+  .modal{
+    align-items:flex-start;
+    overflow:auto; /* single scroll only (usually none needed) */
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+  }
 
-/* ---------- MOBILE RESULT MODAL (single-scroll, strip shrinks) ---------- */
+  .modalCard{
+    width: 96vw;
+    max-height:none;     /* remove vh trap */
+    overflow:visible;    /* no nested scroll */
+    display:flex;
+    flex-direction:column;
+    border-radius:18px;
+  }
 
-.modal{
-  align-items: flex-start;
-  overflow: auto;                      /* ONE scroll only */
-  -webkit-overflow-scrolling: touch;
-  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-  z-index: 200;
-}
+  .preview{
+    border-right:none;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    overflow:visible; /* no scroll here */
+    padding:12px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
 
-.modalCard{
-  width: 96vw;
-  max-height: none;                    /* remove vh trap */
-  overflow: visible;                   /* no nested scroll */
-  display: flex;                       /* stack */
-  flex-direction: column;
-  border-radius: 18px;
-}
+  /* Key: strip shrinks so the panel fits WITHOUT scrolling */
+  .preview img{
+    width:auto;
+    max-width: 90vw;
+    height:auto;
+    max-height: 26vh;   /* smaller than before to avoid any scroll bar */
+    object-fit:contain;
+  }
 
-/* Preview area should NOT scroll */
-.preview{
-  border-right: none;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  overflow: visible;                   /* no scroll here */
-  padding: 12px;
-  display: flex;
-  justify-content: center;
-}
-
-/* Strip shrinks to fit screen height */
-.preview img{
-  width: auto;
-  max-width: 90vw;
-  height: auto;
-  max-height: 32vh;                    /* key: shrink so panel fits */
-  object-fit: contain;
-}
-
-/* Panel should NOT be its own scroll area */
-.panel{
   .panel{
-  padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
-}
+    overflow:visible; /* no inner scroll */
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
+  }
 
-.panel .btn{
-  width: 100%;
-  min-width: 0;
-}
-
-/* Hide the mobile bottom bar while modal is open (so it doesn’t cover buttons) */
-body.modalOpen .mobileBar{
-  display: none !important;
+  .panel .btn{
+    width:100%;
+    min-width:0;
+  }
 }
