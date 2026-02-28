@@ -33,6 +33,11 @@
   const SHOTS = 3;
   const COUNTDOWN_SECONDS = 3;
 
+  // Capture format (forces “desktop-like” look on phones too)
+  // 4:3 landscape is a good “photobooth” framing and matches many webcams
+  const CAPTURE_W = 900;
+  const CAPTURE_H = 675;
+
   const FRAMES = [
     { name: "Gathering Classic", src: "assets/frames/frame-gathering-classic.png" },
     { name: "Killough Maroon",   src: "assets/frames/frame-killough-maroon.png" },
@@ -162,7 +167,11 @@
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false
       });
 
@@ -195,25 +204,56 @@
     });
   }
 
+  /**
+   * Draw a mirrored video frame into a fixed landscape canvas,
+   * center-cropping the source video to match the target aspect.
+   */
+  function drawVideoCroppedMirrored(ctx, v, outW, outH) {
+    const vw = v.videoWidth || outW;
+    const vh = v.videoHeight || outH;
+
+    const targetAR = outW / outH;
+    const videoAR = vw / vh;
+
+    let sx = 0, sy = 0, sw = vw, sh = vh;
+
+    if (videoAR > targetAR) {
+      // Source is wider: crop left/right
+      sh = vh;
+      sw = Math.round(vh * targetAR);
+      sx = Math.round((vw - sw) / 2);
+      sy = 0;
+    } else {
+      // Source is taller (phones): crop top/bottom
+      sw = vw;
+      sh = Math.round(vw / targetAR);
+      sx = 0;
+      sy = Math.round((vh - sh) / 2);
+    }
+
+    // Mirror horizontally (selfie look)
+    ctx.save();
+    ctx.translate(outW, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(v, sx, sy, sw, sh, 0, 0, outW, outH);
+    ctx.restore();
+  }
+
   async function captureWithOverlay() {
     if (!video.videoWidth || !video.videoHeight) await sleep(200);
-    const w = video.videoWidth;
-    const h = video.videoHeight;
 
     const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = CAPTURE_W;
+    canvas.height = CAPTURE_H;
     const ctx = canvas.getContext("2d");
 
-    ctx.save();
-    ctx.translate(w, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, w, h);
-    ctx.restore();
+    // 1) draw cropped landscape frame (fixes portrait-looking phone output)
+    drawVideoCroppedMirrored(ctx, video, CAPTURE_W, CAPTURE_H);
 
+    // 2) overlay (scaled to same capture size)
     try {
       const overlay = await loadImage(FRAMES[selectedFrame].src);
-      ctx.drawImage(overlay, 0, 0, w, h);
+      ctx.drawImage(overlay, 0, 0, CAPTURE_W, CAPTURE_H);
     } catch (e) {
       // ignore overlay load errors
     }
@@ -226,9 +266,11 @@
 
     const stripW = 900;
     const photoW = stripW;
-    const photoH = Math.round(photoW * (loaded[0].height / loaded[0].width));
-    const gap = 20, headerH = 120, footerH = 160;
 
+    // Lock strip photo height to our capture height scaled to strip width (same look on all devices)
+    const photoH = Math.round(photoW * (CAPTURE_H / CAPTURE_W));
+
+    const gap = 20, headerH = 120, footerH = 160;
     const totalH = headerH + (photoH * loaded.length) + (gap * (loaded.length - 1)) + footerH;
 
     const c = document.createElement("canvas");
@@ -270,31 +312,29 @@
     return c.toDataURL("image/png", 0.92);
   }
 
-function openResult(dataUrl) {
-  stripDataUrl = dataUrl;
-  stripPreview.src = dataUrl;
+  function openResult(dataUrl) {
+    stripDataUrl = dataUrl;
+    stripPreview.src = dataUrl;
 
-  // show modal
-  modal.style.display = "flex";
-  document.body.classList.add("modalOpen");
+    modal.style.display = "flex";
+    document.body.classList.add("modalOpen");
 
-  // force scroll to top AFTER layout/paint (prevents “cut off” look)
-  const preview = document.querySelector(".preview");
-  if (preview) {
-    preview.scrollTop = 0;
-    requestAnimationFrame(() => {
+    const preview = document.querySelector(".preview");
+    if (preview) {
       preview.scrollTop = 0;
       requestAnimationFrame(() => {
         preview.scrollTop = 0;
+        requestAnimationFrame(() => {
+          preview.scrollTop = 0;
+        });
       });
-    });
+    }
   }
-}
 
-function closeResult() {
-  modal.style.display = "none";
-  document.body.classList.remove("modalOpen");
-}
+  function closeResult() {
+    modal.style.display = "none";
+    document.body.classList.remove("modalOpen");
+  }
 
   function startOver() {
     closeResult();
@@ -312,43 +352,44 @@ function closeResult() {
     a.click();
   }
 
- async function emailStrip() {
-  const url = (CONFIG.GAS_POST_URL || "").trim();
-  if (!url) {
-    alert("Email is not configured. Add your Apps Script URL in config.js.");
-    return;
+  async function emailStrip() {
+    const url = (CONFIG.GAS_POST_URL || "").trim();
+    if (!url) {
+      alert("Email is not configured. Add your Apps Script URL in config.js.");
+      return;
+    }
+
+    const email = emailInput.value.trim();
+    if (!email) {
+      alert("Enter your email.");
+      return;
+    }
+    if (!stripDataUrl) return;
+
+    emailBtn.disabled = true;
+    setChip("warn", "Sending email…");
+
+    const payload = JSON.stringify({ email, pngDataUrl: stripDataUrl });
+
+    try {
+      // IMPORTANT: text/plain avoids iOS Safari CORS preflight issues
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: payload
+      });
+
+      setChip("ok", "Email sent");
+      alert("Sent! Check your email.");
+    } catch (e) {
+      console.error(e);
+      setChip("bad", "Email failed");
+      alert("Email failed. Check your Apps Script deployment access.");
+    } finally {
+      emailBtn.disabled = false;
+    }
   }
 
-  const email = emailInput.value.trim();
-  if (!email) {
-    alert("Enter your email.");
-    return;
-  }
-  if (!stripDataUrl) return;
-
-  emailBtn.disabled = true;
-  setChip("warn", "Sending email…");
-
-  const payload = JSON.stringify({ email, pngDataUrl: stripDataUrl });
-
-  try {
-    // IMPORTANT: text/plain avoids CORS preflight on iOS Safari
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: payload
-    });
-
-    setChip("ok", "Email sent");
-    alert("Sent! Check your email.");
-  } catch (e) {
-    console.error(e);
-    setChip("bad", "Email failed");
-    alert("Email failed. Check your Apps Script deployment access.");
-  } finally {
-    emailBtn.disabled = false;
-  }
-}
   async function startSession() {
     if (busy) return;
     busy = true;
