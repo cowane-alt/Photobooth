@@ -312,42 +312,43 @@ function closeResult() {
     a.click();
   }
 
-  async function emailStrip() {
-    const url = (CONFIG.GAS_POST_URL || "").trim();
-    if (!url) {
-      alert("Email is not configured. Add your Apps Script URL in config.js.");
-      return;
-    }
-    const email = emailInput.value.trim();
-    if (!email) {
-      alert("Enter your email.");
-      return;
-    }
-    if (!stripDataUrl) return;
-
-    emailBtn.disabled = true;
-    setChip("warn", "Sending email…");
-
-    const payload = { email, pngDataUrl: stripDataUrl };
-
-    try {
-      await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      setChip("ok", "Email sent");
-      alert("Sent! Check your email.");
-    } catch (e) {
-      console.error(e);
-      setChip("bad", "Email failed");
-      alert("Email failed. Check your Apps Script deployment access.");
-    } finally {
-      emailBtn.disabled = false;
-    }
+ async function emailStrip() {
+  const url = (CONFIG.GAS_POST_URL || "").trim();
+  if (!url) {
+    alert("Email is not configured. Add your Apps Script URL in config.js.");
+    return;
   }
 
+  const email = emailInput.value.trim();
+  if (!email) {
+    alert("Enter your email.");
+    return;
+  }
+  if (!stripDataUrl) return;
+
+  emailBtn.disabled = true;
+  setChip("warn", "Sending email…");
+
+  const payload = JSON.stringify({ email, pngDataUrl: stripDataUrl });
+
+  try {
+    // IMPORTANT: text/plain avoids CORS preflight on iOS Safari
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: payload
+    });
+
+    setChip("ok", "Email sent");
+    alert("Sent! Check your email.");
+  } catch (e) {
+    console.error(e);
+    setChip("bad", "Email failed");
+    alert("Email failed. Check your Apps Script deployment access.");
+  } finally {
+    emailBtn.disabled = false;
+  }
+}
   async function startSession() {
     if (busy) return;
     busy = true;
