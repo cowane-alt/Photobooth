@@ -2,6 +2,10 @@
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
   const framesEl = document.getElementById("frames");
+  const framesMobileEl = document.getElementById("framesMobile");
+  const toggleFramesBtn = document.getElementById("toggleFramesBtn");
+  const mobileFramesWrap = document.getElementById("mobileFramesWrap");
+
   const frameOverlay = document.getElementById("frameOverlay");
   const video = document.getElementById("video");
   const chipDot = document.getElementById("chipDot");
@@ -12,6 +16,9 @@
 
   const startBtn = document.getElementById("startBtn");
   const resetBtn = document.getElementById("resetBtn");
+
+  const startBtnMobile = document.getElementById("startBtnMobile");
+  const resetBtnMobile = document.getElementById("resetBtnMobile");
 
   const modal = document.getElementById("modal");
   const stripPreview = document.getElementById("stripPreview");
@@ -56,13 +63,7 @@
     }
   }
 
-  function hidePrompt() {
-    promptEl.classList.remove("show");
-    promptEl.textContent = "";
-  }
-
   function flashFlicker() {
-    // Quick “mall booth” flicker
     flashEl.style.transition = "none";
     flashEl.style.opacity = 0.0;
 
@@ -73,11 +74,7 @@
       { o: 0.00, t: 220 },
     ];
 
-    steps.forEach(s => {
-      setTimeout(() => {
-        flashEl.style.opacity = s.o;
-      }, s.t);
-    });
+    steps.forEach(s => setTimeout(() => { flashEl.style.opacity = s.o; }, s.t));
 
     setTimeout(() => {
       flashEl.style.transition = "opacity 220ms ease";
@@ -89,13 +86,19 @@
     countdownEl.style.opacity = 1;
     countdownEl.textContent = String(n);
   }
-
   function hideCountdown() {
     countdownEl.style.opacity = 0;
     countdownEl.textContent = "";
   }
 
-  function buildFramePicker() {
+  function setButtonsEnabled(enabled) {
+    startBtn.disabled = !enabled;
+    resetBtn.disabled = !enabled;
+    startBtnMobile.disabled = !enabled;
+    resetBtnMobile.disabled = !enabled;
+  }
+
+  function buildFramePickerDesktop() {
     framesEl.innerHTML = "";
     FRAMES.forEach((f, i) => {
       const card = document.createElement("div");
@@ -118,12 +121,40 @@
     });
   }
 
+  function buildFramePickerMobile() {
+    if (!framesMobileEl) return;
+    framesMobileEl.innerHTML = "";
+    FRAMES.forEach((f, i) => {
+      const pill = document.createElement("div");
+      pill.className = "framePill" + (i === selectedFrame ? " selected" : "");
+      pill.addEventListener("click", () => setFrame(i));
+
+      const img = document.createElement("img");
+      img.src = f.src;
+
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = f.name;
+
+      pill.appendChild(img);
+      pill.appendChild(name);
+      framesMobileEl.appendChild(pill);
+    });
+  }
+
+  function syncFrameSelectedUI() {
+    [...document.querySelectorAll(".frameCard")].forEach((el, idx) => {
+      el.classList.toggle("selected", idx === selectedFrame);
+    });
+    [...document.querySelectorAll(".framePill")].forEach((el, idx) => {
+      el.classList.toggle("selected", idx === selectedFrame);
+    });
+  }
+
   function setFrame(i) {
     selectedFrame = i;
     frameOverlay.src = FRAMES[i].src;
-    [...document.querySelectorAll(".frameCard")].forEach((el, idx) => {
-      el.classList.toggle("selected", idx === i);
-    });
+    syncFrameSelectedUI();
   }
 
   async function ensureCamera() {
@@ -144,8 +175,7 @@
         };
       });
 
-      resetBtn.disabled = false;
-      startBtn.disabled = false;
+      setButtonsEnabled(true);
       setChip("ok", "Camera ready");
       return true;
     } catch (e) {
@@ -175,19 +205,17 @@
     canvas.height = h;
     const ctx = canvas.getContext("2d");
 
-    // mirror capture to match preview
     ctx.save();
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, w, h);
     ctx.restore();
 
-    // overlay optional
     try {
       const overlay = await loadImage(FRAMES[selectedFrame].src);
       ctx.drawImage(overlay, 0, 0, w, h);
     } catch (e) {
-      console.warn("Frame overlay failed to load:", FRAMES[selectedFrame].src, e);
+      // ignore overlay load errors
     }
 
     return canvas.toDataURL("image/png", 0.92);
@@ -247,7 +275,6 @@
     stripPreview.src = dataUrl;
     modal.style.display = "flex";
 
-    // make sure the preview starts at top (prevents “looks cut off”)
     const preview = document.querySelector(".preview");
     if (preview) preview.scrollTop = 0;
   }
@@ -261,7 +288,6 @@
     stripDataUrl = "";
     stripPreview.src = "";
     emailInput.value = "";
-    hidePrompt();
     setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Tap Begin");
   }
 
@@ -294,8 +320,7 @@
     try {
       await fetch(url, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
@@ -327,6 +352,7 @@
 
       setChip("warn", "Capturing…");
       startBtn.disabled = true;
+      startBtnMobile.disabled = true;
 
       const shots = [];
       for (let s = 1; s <= SHOTS; s++) {
@@ -343,7 +369,6 @@
         await sleep(450);
       }
 
-      hidePrompt();
       setChip("warn", "Building strip…");
       const strip = await buildPhotoStrip(shots);
       openResult(strip);
@@ -355,8 +380,17 @@
       alert("Capture error: " + (e?.message || e));
     } finally {
       startBtn.disabled = false;
+      startBtnMobile.disabled = false;
       busy = false;
     }
+  }
+
+  // Mobile frames toggle
+  if (toggleFramesBtn && mobileFramesWrap) {
+    toggleFramesBtn.addEventListener("click", () => {
+      const open = mobileFramesWrap.classList.toggle("open");
+      toggleFramesBtn.textContent = open ? "HIDE" : "SHOW";
+    });
   }
 
   // Buttons
@@ -369,12 +403,17 @@
 
   startBtn.addEventListener("click", startSession);
   resetBtn.addEventListener("click", startOver);
+  startBtnMobile.addEventListener("click", startSession);
+  resetBtnMobile.addEventListener("click", startOver);
+
   downloadBtn.addEventListener("click", downloadStrip);
   emailBtn.addEventListener("click", emailStrip);
   startOverBtn.addEventListener("click", startOver);
 
   // Init
-  buildFramePicker();
+  buildFramePickerDesktop();
+  buildFramePickerMobile();
   setFrame(0);
+  setButtonsEnabled(false);
   setChip("warn", "Tap Begin");
 })();
