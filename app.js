@@ -270,18 +270,31 @@
     return c.toDataURL("image/png", 0.92);
   }
 
-  function openResult(dataUrl) {
-    stripDataUrl = dataUrl;
-    stripPreview.src = dataUrl;
-    modal.style.display = "flex";
+function openResult(dataUrl) {
+  stripDataUrl = dataUrl;
+  stripPreview.src = dataUrl;
 
-    const preview = document.querySelector(".preview");
-    if (preview) preview.scrollTop = 0;
-  }
+  // show modal
+  modal.style.display = "flex";
+  document.body.classList.add("modalOpen");
 
-  function closeResult() {
-    modal.style.display = "none";
+  // force scroll to top AFTER layout/paint (prevents “cut off” look)
+  const preview = document.querySelector(".preview");
+  if (preview) {
+    preview.scrollTop = 0;
+    requestAnimationFrame(() => {
+      preview.scrollTop = 0;
+      requestAnimationFrame(() => {
+        preview.scrollTop = 0;
+      });
+    });
   }
+}
+
+function closeResult() {
+  modal.style.display = "none";
+  document.body.classList.remove("modalOpen");
+}
 
   function startOver() {
     closeResult();
