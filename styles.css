@@ -451,10 +451,9 @@ body.modalOpen .mobileBar{
   }
 
   /* ✅ KEY: make strip look like a strip on phones */
-  .preview img{
-    width: min(360px, 86vw);
-    height: auto;
-  }
+.preview img{
+  width: min(320px, 82vw);
+}
 
   .panel .btn{
     width:100%;
