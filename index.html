@@ -8,6 +8,7 @@
 </head>
 <body>
   <div class="app">
+    <!-- DESKTOP SIDEBAR -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brandMark">K</div>
@@ -44,7 +45,6 @@
             <img id="frameOverlay" alt="" />
           </div>
 
-          <!-- On-screen prompts like a mall photobooth -->
           <div id="prompt" class="prompt" aria-live="polite"></div>
 
           <!-- Home screen overlay -->
@@ -53,7 +53,7 @@
               <div class="homeTitle">Welcome to the Photobooth</div>
               <div class="homeSub">Choose a frame, then get ready for 3 photos.</div>
               <button id="beginBtn" class="btn primary homeBtn">TAP TO BEGIN</button>
-              <div class="homeHint">When you press Start, it will take 3 pictures automatically.</div>
+              <div class="homeHint">Press Start. It takes 3 pictures automatically.</div>
             </div>
           </div>
 
@@ -89,9 +89,27 @@
         </div>
       </section>
 
-      <footer class="controls">
+      <!-- DESKTOP CONTROLS -->
+      <footer class="controls controlsDesktop">
         <button id="startBtn" class="btn primary" disabled>START</button>
         <button id="resetBtn" class="btn secondary" disabled>RESET</button>
+      </footer>
+
+      <!-- MOBILE BOTTOM BAR (frames + controls) -->
+      <footer class="mobileBar">
+        <div class="mobileFramesHeader">
+          <div class="mobileFramesTitle">Frames</div>
+          <button id="toggleFramesBtn" class="btn tiny secondary" type="button">SHOW</button>
+        </div>
+
+        <div id="mobileFramesWrap" class="mobileFramesWrap">
+          <div id="framesMobile" class="frameRow"></div>
+        </div>
+
+        <div class="mobileControls">
+          <button id="startBtnMobile" class="btn primary" disabled>START</button>
+          <button id="resetBtnMobile" class="btn secondary" disabled>RESET</button>
+        </div>
       </footer>
     </main>
   </div>
