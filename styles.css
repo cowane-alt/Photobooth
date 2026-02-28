@@ -433,48 +433,69 @@ body.modalOpen .mobileBar{
   }
 
   /* ---------- MOBILE RESULT MODAL (NO NESTED SCROLL, STRIP SHRINKS) ---------- */
+ /* ---------- MOBILE RESULT MODAL (NO SCROLL ANYWHERE) ---------- */
+@media (max-width: 980px){
+
+  /* Modal itself must NOT scroll */
   .modal{
-    align-items:flex-start;
-    overflow:auto; /* single scroll only (usually none needed) */
-    -webkit-overflow-scrolling: touch;
-    padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden; /* <-- key */
+    padding: 0;
   }
 
+  /* Make the card exactly the viewport height */
   .modalCard{
-    width: 96vw;
-    max-height:none;     /* remove vh trap */
-    overflow:visible;    /* no nested scroll */
-    display:flex;
-    flex-direction:column;
-    border-radius:18px;
+    width: 100vw;
+    height: 100dvh; /* modern mobile viewport unit */
+    max-height: 100dvh;
+    overflow: hidden; /* <-- key */
+    display: flex;
+    flex-direction: column;
+    border-radius: 0; /* prevents tiny overflow from rounding */
   }
 
+  /* Preview area: no scroll */
   .preview{
-    border-right:none;
+    flex: 0 0 auto;
+    overflow: hidden; /* <-- key */
+    padding: 10px;
+    border-right: none;
     border-bottom: 1px solid rgba(255,255,255,.08);
-    overflow:visible; /* no scroll here */
-    padding:12px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  /* Key: strip shrinks so the panel fits WITHOUT scrolling */
+  /* Strip MUST shrink to fit whatever space it gets */
   .preview img{
-    width:auto;
-    max-width: 90vw;
-    height:auto;
-    max-height: 26vh;   /* smaller than before to avoid any scroll bar */
-    object-fit:contain;
+    display:block;
+    width: auto;
+    max-width: 92vw;
+    height: auto;
+    max-height: 22dvh; /* smaller so panel always fits */
+    object-fit: contain;
   }
 
+  /* Panel: also no scroll */
   .panel{
-    overflow:visible; /* no inner scroll */
+    flex: 1 1 auto;
+    overflow: hidden; /* <-- key (no nested scroll) */
     padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
   }
 
+  /* Keep buttons + inputs visible without needing scroll */
   .panel .btn{
     width:100%;
     min-width:0;
   }
+
+  /* Optional: tighten spacing inside the panel */
+  .divider{ margin: 10px 0; }
+  .tinyNote{ margin-top: 6px; }
+
 }
