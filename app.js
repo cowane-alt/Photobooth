@@ -40,9 +40,9 @@
 
   const FRAMES = [
     { name: "Classic", src: "assets/frames/classic.png" },
-    { name: "Killough Maroon",   src: "assets/frames/frame-killough-maroon.png" },
-    { name: "Farmers Night",     src: "assets/frames/frame-farmers-night.png" },
-    { name: "Texas Star",        src: "assets/frames/frame-texas-star.png" },
+    { name: "Lewisville",   src: "assets/frames/Lewisville.png" },
+    { name: "LHS",     src: "assets/frames/LHS.png" },
+    { name: "Gathering",        src: "assets/frames/Gathering.png" },
   ];
 
   let selectedFrame = 0;
