@@ -39,7 +39,7 @@
   const CAPTURE_H = 675;
 
   const FRAMES = [
-    { name: "Gathering Classic", src: "assets/frames/frame-gathering-classic.png" },
+    { name: "Gathering Classic", src: "assets/frames/classic.png" },
     { name: "Killough Maroon",   src: "assets/frames/frame-killough-maroon.png" },
     { name: "Farmers Night",     src: "assets/frames/frame-farmers-night.png" },
     { name: "Texas Star",        src: "assets/frames/frame-texas-star.png" },
